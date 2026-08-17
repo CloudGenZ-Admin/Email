@@ -3,10 +3,14 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { config } from "./config/env.js";
+import { connectDB } from "./config/db.js";
 import submitRouter from "./routes/submit.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
+
+// Initialize Database Connection
+connectDB();
 
 // Trust proxy if running behind Nginx / Cloudflare
 if (config.trustProxy) {
@@ -60,14 +64,7 @@ app.use(errorHandler);
 
 // Start Server
 const server = app.listen(config.port, () => {
-  console.log("==================================================");
-  console.log(` CloudGenz Form Notification Service`);
-  console.log(` Running on: http://localhost:${config.port}`);
-  console.log(` Environment: ${config.nodeEnv}`);
-  console.log(` SMTP Host: ${config.smtp.host}:${config.smtp.port}`);
-  console.log(` Daily Limit: ${config.rateLimit.maxPerDay} requests / IP / form`);
-  console.log(` Default BCC: ${config.defaultBcc.join(", ")}`);
-  console.log("==================================================");
+  console.log(`[Server] Running on http://localhost:${config.port}`);
 });
 
 // Graceful shutdown

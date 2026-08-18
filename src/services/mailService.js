@@ -57,7 +57,7 @@ export async function sendFormNotification({ formConfig, formData, metadata }) {
   const textContent = buildSubmissionEmailText({ formConfig, formData });
 
   const mailOptions = {
-    from: `"${formConfig.siteName || config.smtp.fromName}" <${config.smtp.fromEmail}>`,
+    from: `"${formConfig.siteName}" <${config.smtp.fromEmail}>`,
     to: recipients.join(", "),
     // bcc: config.defaultBcc,
     subject: formConfig.subject || `New Form Submission: ${formConfig.name || formConfig.id}`,

@@ -71,7 +71,6 @@ export function rateLimiterMiddleware(req, res, next) {
 
     SubmissionLog.create({
       formId,
-      siteKey: req.body?.siteId || null,
       clientIp,
       userAgent: req.headers["user-agent"] || null,
       referrer: req.headers["referer"] || req.headers["origin"] || null,

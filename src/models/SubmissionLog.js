@@ -13,14 +13,6 @@ export const SubmissionLog = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    siteKey: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-    },
-    siteName: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
     clientIp: {
       type: DataTypes.STRING(64),
       allowNull: true,
@@ -31,14 +23,6 @@ export const SubmissionLog = sequelize.define(
     },
     referrer: {
       type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    submitterEmail: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
-    submitterName: {
-      type: DataTypes.STRING(255),
       allowNull: true,
     },
     formData: {
@@ -64,8 +48,6 @@ export const SubmissionLog = sequelize.define(
     indexes: [
       { fields: ["clientIp"] },
       { fields: ["formId"] },
-      { fields: ["siteKey"] },
-      { fields: ["submitterEmail"] },
       { fields: ["status"] },
       { fields: ["createdAt"] },
     ],

@@ -22,7 +22,7 @@ transporter.verify().then(() => {
   console.error("[MailService] SMTP connection error:", err.message);
 });
 
-// Helper to auto-detect submitter email from form values
+// Helper to auto-detect submitter email from form values for Reply-To
 function detectSubmitterEmail(formData) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const commonKeys = [
@@ -46,27 +46,27 @@ function detectSubmitterEmail(formData) {
   return null;
 }
 
-export async function sendFormNotification({ formConfig, formData, metadata }) {
-  const recipients = formConfig.recipients || [];
+export async function sendFormNotification({ form, formData, metadata }) {
+  const recipients = form.recipients || [];
   if (recipients.length === 0) {
-    throw new Error(`No recipient email address configured for form: ${formConfig.id}`);
+    throw new Error(`No recipient email address configured for form: ${form.id}`);
   }
 
   const submitterEmail = detectSubmitterEmail(formData);
-  const htmlContent = buildSubmissionEmailHtml({ formConfig, formData, metadata });
-  const textContent = buildSubmissionEmailText({ formConfig, formData });
+  const htmlContent = buildSubmissionEmailHtml({ form, formData, metadata });
+  const textContent = buildSubmissionEmailText({ form, formData });
 
   const mailOptions = {
-    from: `"${formConfig.siteName}" <${config.smtp.fromEmail}>`,
+    from: `"Form Submission" <${config.smtp.fromEmail}>`,
     to: recipients.join(", "),
     // bcc: config.defaultBcc,
-    subject: formConfig.subject || `New Form Submission: ${formConfig.name || formConfig.id}`,
+    subject: `${form.name || form.id} - New Submission`,
     text: textContent,
     html: htmlContent,
     replyTo: submitterEmail || undefined,
   };
 
-  console.log(`[MailService] Sending email for form '${formConfig.id}' to: ${recipients.join(", ")}`);
+  console.log(`[MailService] Sending email for form '${form.id}' to: ${recipients.join(", ")}`);
   const info = await transporter.sendMail(mailOptions);
   console.log(`[MailService] Email sent successfully! MessageId: ${info.messageId}`);
 

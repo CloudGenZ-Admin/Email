@@ -1,24 +1,11 @@
 {
   "websites": {
-    "mtsc-toronto": {
-      "name": "Mission to Seafarers Toronto",
-      "timezone": "America/Toronto",
       "forms": {
         "toronto-contact": {
-          "id": "toronto-contact",
           "name": "Contact Inquiry",
           "recipients": ["mayur23221@gmail.com"],
-          "subject": "New Contact Inquiry - MTSC Toronto",
-          "successMessage": "Thank you! Your message has been sent successfully. We will be in touch shortly."
+          "timezone": "America/Toronto"
         },
-        "comprehensive-demo": {
-          "id": "comprehensive-demo",
-          "name": "Comprehensive Multi-Field Demo Form",
-          "recipients": ["mayur23221@gmail.com"],
-          "subject": "Comprehensive 25-Field Form Submission Test",
-          "successMessage": "Thank you! Your comprehensive submission has been received."
-        }
-      }
     }
   }
 }

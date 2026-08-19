@@ -1,35 +1,10 @@
-import { configService } from "../services/configService.js";
-import { mailService } from "../services/mailService.js";
+import { Form } from "../models/Form.js";
 import { SubmissionLog } from "../models/SubmissionLog.js";
-
-// Helper to detect submitter's email from submitted fields
-function detectEmail(formData) {
-  if (!formData) return null;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  for (const [key, val] of Object.entries(formData)) {
-    if (typeof val === "string" && (key.toLowerCase().includes("email") || emailRegex.test(val.trim()))) {
-      if (emailRegex.test(val.trim())) return val.trim();
-    }
-  }
-  return null;
-}
-
-// Helper to detect submitter's name from submitted fields
-function detectName(formData) {
-  if (!formData) return null;
-  for (const [key, val] of Object.entries(formData)) {
-    if (typeof val === "string" && ["name", "full_name", "fullname", "cname", "contactname", "first_name"].includes(key.toLowerCase())) {
-      return val.trim();
-    }
-  }
-  return null;
-}
+import { mailService } from "../services/mailService.js";
 
 // Helper to save submission log to database
 async function saveDbLog({
   formId,
-  siteKey,
-  siteName,
   clientIp,
   userAgent,
   referrer,
@@ -41,13 +16,9 @@ async function saveDbLog({
   try {
     await SubmissionLog.create({
       formId,
-      siteKey,
-      siteName,
       clientIp,
       userAgent,
       referrer,
-      submitterEmail: detectEmail(formData),
-      submitterName: detectName(formData),
       formData,
       status,
       errorMessage,
@@ -61,7 +32,6 @@ async function saveDbLog({
 // Main Submit Controller
 export async function submitForm(req, res, next) {
   const formId = req.params.formId;
-  const siteKey = req.body.siteId || null;
   const clientIp = req.clientIp || req.ip;
   const userAgent = req.headers["user-agent"];
   const referrer = req.headers["referer"] || req.headers["origin"];
@@ -74,14 +44,14 @@ export async function submitForm(req, res, next) {
       });
     }
 
-    // 1. Look up form configuration from websites.json
-    const formConfig = configService.getForm(formId, siteKey);
+    // 1. Look up form configuration directly from MySQL database
+    const form = await Form.findByPk(formId);
 
-    if (!formConfig) {
+    if (!form) {
       console.warn(`[Submit] Unknown formId requested: '${formId}'`);
       return res.status(404).json({
         success: false,
-        message: `Form with ID '${formId}' is not registered in websites.json.`,
+        message: `Form with ID '${formId}' is not registered in the database.`,
       });
     }
 
@@ -91,8 +61,6 @@ export async function submitForm(req, res, next) {
 
       await saveDbLog({
         formId,
-        siteKey: formConfig.siteKey,
-        siteName: formConfig.siteName,
         clientIp,
         userAgent,
         referrer,
@@ -101,7 +69,7 @@ export async function submitForm(req, res, next) {
         errorMessage: "Blocked by honeypot trap",
       });
 
-      return res.json({ success: true, message: "Thank you for your submission." });
+      return res.status(200).json({ success: true });
     }
 
     // 3. Clean submitted fields
@@ -126,7 +94,7 @@ export async function submitForm(req, res, next) {
 
     // 5. Dispatch email via PurelyMail
     const mailResult = await mailService.sendFormNotification({
-      formConfig,
+      form,
       formData,
       metadata,
     });
@@ -138,9 +106,7 @@ export async function submitForm(req, res, next) {
 
     // 7. Log successful submission in MySQL Database
     await saveDbLog({
-      formId: formConfig.id,
-      siteKey: formConfig.siteKey,
-      siteName: formConfig.siteName,
+      formId: form.id,
       clientIp,
       userAgent,
       referrer,
@@ -149,17 +115,14 @@ export async function submitForm(req, res, next) {
       emailMessageId: mailResult?.messageId,
     });
 
-    // 8. Return clean JSON response
-    const successMessage = formConfig.successMessage || "Thank you! Your message has been sent successfully.";
+    // 8. Return success
     return res.status(200).json({
       success: true,
-      message: successMessage,
     });
   } catch (error) {
     // Log failed submission in database
     await saveDbLog({
       formId,
-      siteKey,
       clientIp,
       userAgent,
       referrer,

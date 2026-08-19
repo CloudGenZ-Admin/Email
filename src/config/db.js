@@ -1,6 +1,8 @@
 import { Sequelize } from "sequelize";
 import mysql from "mysql2/promise";
 import { config } from "./env.js";
+import "../models/Form.js";
+import "../models/SubmissionLog.js";
 
 export const sequelize = new Sequelize(
   config.db.name,
@@ -26,7 +28,6 @@ export const sequelize = new Sequelize(
 
 export async function connectDB() {
   try {
-    // Automatically create database if it doesn't exist yet
     const connection = await mysql.createConnection({
       host: config.db.host,
       port: config.db.port,
@@ -39,7 +40,7 @@ export async function connectDB() {
     await sequelize.authenticate();
     console.log(`[Database] MySQL connected to '${config.db.name}' on ${config.db.host}:${config.db.port}`);
 
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ alter: true });
     console.log("[Database] Models synchronized successfully.");
   } catch (error) {
     console.warn(`[Database] MySQL connection failed (${error.message}).`);

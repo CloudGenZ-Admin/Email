@@ -4,12 +4,10 @@
 export function formatFieldLabel(key) {
   if (!key) return "Field";
 
-  // If key is like entry.1234567, replace with readable placeholder or keep
   if (key.startsWith("entry.")) {
     return `Form Field (${key})`;
   }
 
-  // Remove common prefixes like cname -> name, cemail -> email, if single letter prefix
   let cleaned = key;
   if (/^[a-z][A-Z]/.test(key)) {
     cleaned = key;
@@ -17,13 +15,9 @@ export function formatFieldLabel(key) {
     cleaned = key.substring(1);
   }
 
-  // Convert snake_case or kebab-case to spaces
   cleaned = cleaned.replace(/[-_]+/g, " ");
-
-  // Insert space before capital letters (camelCase to words)
   cleaned = cleaned.replace(/([a-z])([A-Z])/g, "$1 $2");
 
-  // Capitalize each word
   return cleaned
     .split(" ")
     .filter(Boolean)
@@ -56,7 +50,6 @@ export function formatFieldValue(val) {
     )}</pre>`;
   }
 
-  // Preserve newlines for multiline text
   const escaped = escapeHtml(String(val));
   return escaped.replace(/\n/g, "<br/>");
 }
@@ -71,17 +64,15 @@ function escapeHtml(text) {
 }
 
 /**
- * Builds the modern HTML email template
+ * Builds the responsive HTML email template
  */
 export function buildSubmissionEmailHtml({
-  formConfig,
+  form,
   formData,
-  metadata: { clientIp, timestamp, userAgent, referrer },
+  metadata: { timestamp },
 }) {
-  const siteName = formConfig.siteName || "Website";
-  const formName = formConfig.name || formConfig.id;
+  const formName = form.name || form.id || "Form Submission";
 
-  // Resolve timezone (supports IANA timezones like "America/Toronto", "Asia/Kolkata", "UTC", or shortcuts like "IST", "EST")
   const tzShortcuts = {
     IST: "Asia/Kolkata",
     EST: "America/New_York",
@@ -93,7 +84,7 @@ export function buildSubmissionEmailHtml({
     GMT: "GMT",
   };
 
-  const rawTz = formConfig.timezone || "America/Toronto";
+  const rawTz = form.timezone || "America/Toronto";
   const resolvedTz = tzShortcuts[rawTz.toUpperCase()] || rawTz;
 
   let dateFormatted = "";
@@ -108,8 +99,7 @@ export function buildSubmissionEmailHtml({
     dateFormatted = `${new Date(timestamp).toUTCString()} (UTC)`;
   }
 
-  // Filter out internal system keys from the display table
-  const ignoredKeys = ["formid", "form_id", "siteid", "site_id", "_next", "_redirect", "g-recaptcha-response", "honeypot"];
+  const ignoredKeys = ["formid", "form_id", "siteid", "site_id", "_next", "_redirect", "g-recaptcha-response", "honeypot", "_gotcha"];
   const fields = Object.entries(formData).filter(
     ([key]) => !ignoredKeys.includes(key.toLowerCase())
   );
@@ -147,7 +137,7 @@ export function buildSubmissionEmailHtml({
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #0f2744 0%, #1a365d 100%); padding: 28px 32px; color: #ffffff;">
       <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #f97316; margin-bottom: 6px;">
-        ${escapeHtml(siteName)}
+        FORM NOTIFICATION
       </div>
       <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; line-height: 1.3;">
         ${escapeHtml(formName)}
@@ -185,16 +175,11 @@ export function buildSubmissionEmailHtml({
 /**
  * Builds clean plain-text fallback
  */
-export function buildSubmissionEmailText({
-  formConfig,
-  formData,
-}) {
-  const siteName = formConfig.siteName || "Website";
-  const formName = formConfig.name || formConfig.id;
-  const ignoredKeys = ["formid", "form_id", "siteid", "site_id", "_next", "_redirect", "g-recaptcha-response", "honeypot"];
+export function buildSubmissionEmailText({ form, formData }) {
+  const formName = form.name || form.id || "Form Submission";
+  const ignoredKeys = ["formid", "form_id", "siteid", "site_id", "_next", "_redirect", "g-recaptcha-response", "honeypot", "_gotcha"];
 
   let text = `=== NEW FORM SUBMISSION ===\n\n`;
-  text += `Website: ${siteName}\n`;
   text += `Form: ${formName}\n\n`;
   text += `--- SUBMISSION DATA ---\n\n`;
 

@@ -4,6 +4,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { config } from "./config/env.js";
 import { connectDB } from "./config/db.js";
+import "./models/Form.js";
+import "./models/SubmissionLog.js";
 import submitRouter from "./routes/submit.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 

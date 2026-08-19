@@ -1,8 +1,6 @@
 import { Sequelize } from "sequelize";
 import mysql from "mysql2/promise";
 import { config } from "./env.js";
-import "../models/Form.js";
-import "../models/SubmissionLog.js";
 
 export const sequelize = new Sequelize(
   config.db.name,
